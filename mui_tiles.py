@@ -353,8 +353,19 @@ def wizard(
     out: Path = typer.Option(Path("./export"), help="Output folder (will contain map/...)") ,
     keep_png: bool = typer.Option(False, help="Keep downloaded png files next to .bin"),
     delay_ms: int = typer.Option(80, help="Delay between downloads (politeness)"),
+    # Optional non-interactive args (so people can script it, or so we can demo without typing)
+    country: Optional[str] = typer.Option(None, help="Country code: us|ca|mx (skips country menu)"),
+    region: Optional[str] = typer.Option(None, help="Region name (e.g., Florida, Ontario) (skips region menu)"),
+    zoom_mode: Optional[str] = typer.Option(None, help="recommended|fast|detailed|custom (skips zoom menu)"),
+    min_z: Optional[int] = typer.Option(None, min=0, max=19, help="Min zoom (only for zoom_mode=custom)"),
+    max_z: Optional[int] = typer.Option(None, min=0, max=19, help="Max zoom (only for zoom_mode=custom)"),
+    style: Optional[str] = typer.Option(None, help="Style key (osm|carto-light|carto-dark)"),
+    yes: bool = typer.Option(False, help="Skip confirmation prompt"),
 ):
-    """Interactive menu flow (country -> region menu -> recommended zoom -> style)."""
+    """Interactive menu flow (country -> region menu -> recommended zoom -> style).
+
+    Also supports non-interactive flags for scripting.
+    """
     console.print(BANNER)
     ensure_ok_lvglimage()
 
@@ -386,28 +397,45 @@ def wizard(
         ("Mexico", "mx", MEXICO_STATES),
     ]
 
-    console.print("[bold]Select a country[/bold]")
-    for i, (name, _, _) in enumerate(countries, start=1):
-        console.print(f"  {i}) {name}")
-    idx = IntPrompt.ask(
-        "Country",
-        choices=[str(i) for i in range(1, len(countries) + 1)],
-        default="1",
-    )
-    country_name, country_code, region_list = countries[int(idx) - 1]
+    # Country selection
+    if country is None:
+        console.print("[bold]Select a country[/bold]")
+        for i, (name, _, _) in enumerate(countries, start=1):
+            console.print(f"  {i}) {name}")
+        idx = IntPrompt.ask(
+            "Country",
+            choices=[str(i) for i in range(1, len(countries) + 1)],
+            default="1",
+        )
+        country_name, country_code, region_list = countries[int(idx) - 1]
+    else:
+        cc = country.lower()
+        match = next((c for c in countries if c[1] == cc), None)
+        if not match:
+            raise typer.BadParameter("--country must be one of: us, ca, mx")
+        country_name, country_code, region_list = match
 
     console.print(f"\n[bold]{country_name}[/bold] selected.")
 
-    # Region menu
-    console.print("\n[bold]Select a region[/bold]")
-    for i, rname in enumerate(region_list, start=1):
-        console.print(f"  {i}) {rname}")
-    ridx = IntPrompt.ask(
-        "Region",
-        choices=[str(i) for i in range(1, len(region_list) + 1)],
-        default="1",
-    )
-    region_name = region_list[int(ridx) - 1]
+    # Region selection
+    if region is None:
+        console.print("\n[bold]Select a region[/bold]")
+        for i, rname in enumerate(region_list, start=1):
+            console.print(f"  {i}) {rname}")
+        ridx = IntPrompt.ask(
+            "Region",
+            choices=[str(i) for i in range(1, len(region_list) + 1)],
+            default="1",
+        )
+        region_name = region_list[int(ridx) - 1]
+    else:
+        # Case-insensitive match against known regions
+        wanted = region.strip().lower()
+        region_name = next((r for r in region_list if r.lower() == wanted), None)
+        if not region_name:
+            raise typer.BadParameter(
+                f"Unknown region '{region}'. Use wizard without flags to see the menu for {country_name}."
+            )
 
     # Geocode automatically (user doesn't type coords)
     console.print(f"\nFinding {region_name}...")
@@ -435,40 +463,63 @@ def wizard(
     )
 
     # Zoom presets (dumb-easy defaults)
-    zoom_presets = [
-        ("Recommended (balanced)", 6, 13),
-        ("Fast (smaller download)", 6, 11),
-        ("Detailed (bigger download)", 6, 15),
-        ("Custom", None, None),
-    ]
-    console.print("\n[bold]Zoom range[/bold]")
-    for i, (label, zmin, zmax) in enumerate(zoom_presets, start=1):
+    zoom_presets = {
+        "recommended": ("Recommended (balanced)", 6, 13),
+        "fast": ("Fast (smaller download)", 6, 11),
+        "detailed": ("Detailed (bigger download)", 6, 15),
+        "custom": ("Custom", None, None),
+    }
+
+    if zoom_mode is None:
+        console.print("\n[bold]Zoom range[/bold]")
+        menu = [
+            zoom_presets["recommended"],
+            zoom_presets["fast"],
+            zoom_presets["detailed"],
+            zoom_presets["custom"],
+        ]
+        for i, (label, zmin, zmax) in enumerate(menu, start=1):
+            if zmin is None:
+                console.print(f"  {i}) {label}")
+            else:
+                console.print(f"  {i}) {label}  ({zmin}..{zmax})")
+        zidx = IntPrompt.ask(
+            "Zoom mode",
+            choices=[str(i) for i in range(1, len(menu) + 1)],
+            default="1",
+        )
+        label, zmin, zmax = menu[int(zidx) - 1]
         if zmin is None:
-            console.print(f"  {i}) {label}")
+            min_z = IntPrompt.ask("Zoom OUT (min zoom)", default=6)
+            max_z = IntPrompt.ask("Zoom IN (max zoom)", default=13)
         else:
-            console.print(f"  {i}) {label}  ({zmin}..{zmax})")
-    zidx = IntPrompt.ask(
-        "Zoom mode",
-        choices=[str(i) for i in range(1, len(zoom_presets) + 1)],
-        default="1",
-    )
-    label, zmin, zmax = zoom_presets[int(zidx) - 1]
-    if zmin is None:
-        min_z = IntPrompt.ask("Zoom OUT (min zoom)", default=6)
-        max_z = IntPrompt.ask("Zoom IN (max zoom)", default=13)
+            min_z, max_z = zmin, zmax
     else:
-        min_z, max_z = zmin, zmax
+        zm = zoom_mode.lower().strip()
+        if zm not in zoom_presets:
+            raise typer.BadParameter("--zoom-mode must be one of: recommended, fast, detailed, custom")
+        label, zmin, zmax = zoom_presets[zm]
+        if zmin is None:
+            if min_z is None or max_z is None:
+                raise typer.BadParameter("For --zoom-mode custom you must provide --min-z and --max-z")
+        else:
+            min_z, max_z = zmin, zmax
 
     if min_z < 0 or max_z > 19 or min_z > max_z:
         raise typer.BadParameter("Zoom range must be within 0..19 and min<=max")
 
     # Style selection
-    console.print("\n[bold]Select a map style[/bold]")
-    style_keys = list(STYLES.keys())
-    for i, k in enumerate(style_keys, start=1):
-        console.print(f"  {i}) {k}")
-    sidx = IntPrompt.ask("Style", choices=[str(i) for i in range(1, len(style_keys) + 1)], default="1")
-    style = style_keys[int(sidx) - 1]
+    if style is None:
+        console.print("\n[bold]Select a map style[/bold]")
+        style_keys = list(STYLES.keys())
+        for i, k in enumerate(style_keys, start=1):
+            console.print(f"  {i}) {k}")
+        sidx = IntPrompt.ask("Style", choices=[str(i) for i in range(1, len(style_keys) + 1)], default="1")
+        style = style_keys[int(sidx) - 1]
+
+    if style not in STYLES:
+        raise typer.BadParameter(f"Unknown style '{style}'. Choose from: {', '.join(STYLES.keys())}")
+
     url_tmpl = STYLES[style]
 
     # Estimate tiles + size
@@ -489,9 +540,10 @@ def wizard(
     if total_tiles > 25000:
         console.print("[yellow]Warning:[/yellow] That is a LOT of tiles. Consider 'Fast' mode or a tighter area.")
 
-    go = Prompt.ask("Start download?", choices=["y", "n"], default="y")
-    if go.lower() != "y":
-        raise typer.Exit(0)
+    if not yes:
+        go = Prompt.ask("Start download?", choices=["y", "n"], default="y")
+        if go.lower() != "y":
+            raise typer.Exit(0)
 
     # Run
     grand_dl = grand_conv = grand_fail = 0
