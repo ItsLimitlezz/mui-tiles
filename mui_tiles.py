@@ -147,10 +147,15 @@ def download_tile(session: requests.Session, url_tmpl: str, t: Tile, out_png: Pa
             r = session.get(url, timeout=20)
             if r.status_code == 200 and r.content:
                 out_png.write_bytes(r.content)
-                # quick sanity: some servers return HTML error pages.
+                # Quick sanity: some servers return HTML error pages.
+                # BUT: some valid tiles (mostly empty/ocean) can be very small PNGs.
                 if out_png.stat().st_size < 256:
-                    out_png.unlink(missing_ok=True)
-                    raise RuntimeError("downloaded tile too small (likely error response)")
+                    sig = out_png.read_bytes()[:16]
+                    ct = (r.headers.get("content-type") or "").lower()
+                    is_png = sig.startswith(b"\x89PNG\r\n\x1a\n")
+                    if not is_png and "image/png" not in ct:
+                        out_png.unlink(missing_ok=True)
+                        raise RuntimeError("downloaded tile too small and not png (likely error response)")
                 return True
             elif r.status_code in (429, 500, 502, 503, 504):
                 time.sleep(0.7 * attempt)
