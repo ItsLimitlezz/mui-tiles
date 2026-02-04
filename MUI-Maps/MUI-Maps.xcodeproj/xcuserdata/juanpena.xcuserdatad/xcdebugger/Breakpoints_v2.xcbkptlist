@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "93211EB6-72C7-4D26-AA23-EFEEA320B985"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "681236E9-1DE4-483F-8FA7-3B57C71825B5"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MUI-Maps/TileConverter.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "12"
+            endingLineNumber = "12"
+            landmarkName = "TileConverter"
+            landmarkType = "3">
+            <Locations>
+               <Location
+                  uuid = "681236E9-1DE4-483F-8FA7-3B57C71825B5 - 8b11dd7c76a31769"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "MUI_Maps.TileConverter.deinit"
+                  moduleName = "MUI-Maps.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/juanpena/Documents/Git/mui-tiles/MUI-Maps/MUI-Maps/TileConverter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
+               </Location>
+               <Location
+                  uuid = "681236E9-1DE4-483F-8FA7-3B57C71825B5 - 33eece6feda83f54"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "MUI_Maps.TileConverter.__deallocating_deinit"
+                  moduleName = "MUI-Maps.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/juanpena/Documents/Git/mui-tiles/MUI-Maps/MUI-Maps/TileConverter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
+               </Location>
+               <Location
+                  uuid = "681236E9-1DE4-483F-8FA7-3B57C71825B5 - a4eae1a35e9b72d5"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "MUI_Maps.TileConverter.__allocating_init() -&gt; MUI_Maps.TileConverter"
+                  moduleName = "MUI-Maps.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/juanpena/Documents/Git/mui-tiles/MUI-Maps/MUI-Maps/TileConverter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
+               </Location>
+               <Location
+                  uuid = "681236E9-1DE4-483F-8FA7-3B57C71825B5 - 361807b4e8daaa9f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "MUI_Maps.TileConverter.init() -&gt; MUI_Maps.TileConverter"
+                  moduleName = "MUI-Maps.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/juanpena/Documents/Git/mui-tiles/MUI-Maps/MUI-Maps/TileConverter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "14"
+                  endingLineNumber = "14">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>
