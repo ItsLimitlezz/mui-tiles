@@ -9,7 +9,8 @@ import Foundation
 import AppKit
 
 /// Service for converting PNG tiles to LVGL RGB565 binary format
-actor TileConverter {
+/// Note: use as a plain class (was previously an actor); call convertPNGToBin from async contexts.
+final class TileConverter {
     
     private var warnedAboutFallback = false
 
