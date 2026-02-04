@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A1B2C3D4E500000000000001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000101 /* ContentView.swift */; };
-		A1B2C3D4E500000000000002 /* MUI_MapsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000102 /* MUI_MapsApp.swift */; };
-		A1B2C3D4E500000000000003 /* Tile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000103 /* Tile.swift */; };
-		A1B2C3D4E500000000000004 /* TileConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000104 /* TileConverter.swift */; };
-		A1B2C3D4E500000000000005 /* TileDownloadViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000105 /* TileDownloadViewModel.swift */; };
-		A1B2C3D4E500000000000006 /* TileDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000106 /* TileDownloader.swift */; };
+		A1B2C3D4E500000000000001 /* MUI-Maps/ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000101 /* MUI-Maps/ContentView.swift */; };
+		A1B2C3D4E500000000000002 /* MUI-Maps/MUI_MapsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000102 /* MUI-Maps/MUI_MapsApp.swift */; };
+		A1B2C3D4E500000000000003 /* MUI-Maps/Tile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000103 /* MUI-Maps/Tile.swift */; };
+		A1B2C3D4E500000000000004 /* MUI-Maps/TileConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000104 /* MUI-Maps/TileConverter.swift */; };
+		A1B2C3D4E500000000000005 /* MUI-Maps/TileDownloadViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000105 /* MUI-Maps/TileDownloadViewModel.swift */; };
+		A1B2C3D4E500000000000006 /* MUI-Maps/TileDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000106 /* MUI-Maps/TileDownloader.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,16 +33,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A1B2C3D4E500000000000101 /* MUI-Maps/ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/ContentView.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E500000000000102 /* MUI-Maps/MUI_MapsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/MUI_MapsApp.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E500000000000103 /* MUI-Maps/Tile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/Tile.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E500000000000104 /* MUI-Maps/TileConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/TileConverter.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E500000000000105 /* MUI-Maps/TileDownloadViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/TileDownloadViewModel.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E500000000000106 /* MUI-Maps/TileDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/TileDownloader.swift"; sourceTree = "<group>"; };
 		B65CE6FC2F33A4D600730866 /* MUI-Maps.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MUI-Maps.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B65CE7092F33A4D700730866 /* MUI-MapsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MUI-MapsTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B65CE7132F33A4D700730866 /* MUI-MapsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MUI-MapsUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-
-		A1B2C3D4E500000000000101 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/ContentView.swift"; sourceTree = "<group>"; };
-		A1B2C3D4E500000000000102 /* MUI_MapsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/MUI_MapsApp.swift"; sourceTree = "<group>"; };
-		A1B2C3D4E500000000000103 /* Tile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/Tile.swift"; sourceTree = "<group>"; };
-		A1B2C3D4E500000000000104 /* TileConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/TileConverter.swift"; sourceTree = "<group>"; };
-		A1B2C3D4E500000000000105 /* TileDownloadViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/TileDownloadViewModel.swift"; sourceTree = "<group>"; };
-		A1B2C3D4E500000000000106 /* TileDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/TileDownloader.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -95,6 +94,7 @@
 				B65CE70C2F33A4D700730866 /* MUI-MapsTests */,
 				B65CE7162F33A4D700730866 /* MUI-MapsUITests */,
 				B65CE6FD2F33A4D600730866 /* Products */,
+				B65CE7442F33C57100730866 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -106,6 +106,19 @@
 				B65CE7132F33A4D700730866 /* MUI-MapsUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B65CE7442F33C57100730866 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E500000000000101 /* MUI-Maps/ContentView.swift */,
+				A1B2C3D4E500000000000102 /* MUI-Maps/MUI_MapsApp.swift */,
+				A1B2C3D4E500000000000103 /* MUI-Maps/Tile.swift */,
+				A1B2C3D4E500000000000104 /* MUI-Maps/TileConverter.swift */,
+				A1B2C3D4E500000000000105 /* MUI-Maps/TileDownloadViewModel.swift */,
+				A1B2C3D4E500000000000106 /* MUI-Maps/TileDownloader.swift */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -252,12 +265,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1B2C3D4E500000000000001 /* ContentView.swift in Sources */,
-				A1B2C3D4E500000000000002 /* MUI_MapsApp.swift in Sources */,
-				A1B2C3D4E500000000000003 /* Tile.swift in Sources */,
-				A1B2C3D4E500000000000004 /* TileConverter.swift in Sources */,
-				A1B2C3D4E500000000000005 /* TileDownloadViewModel.swift in Sources */,
-				A1B2C3D4E500000000000006 /* TileDownloader.swift in Sources */,
+				A1B2C3D4E500000000000001 /* MUI-Maps/ContentView.swift in Sources */,
+				A1B2C3D4E500000000000002 /* MUI-Maps/MUI_MapsApp.swift in Sources */,
+				A1B2C3D4E500000000000003 /* MUI-Maps/Tile.swift in Sources */,
+				A1B2C3D4E500000000000004 /* MUI-Maps/TileConverter.swift in Sources */,
+				A1B2C3D4E500000000000005 /* MUI-Maps/TileDownloadViewModel.swift in Sources */,
+				A1B2C3D4E500000000000006 /* MUI-Maps/TileDownloader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -421,9 +434,20 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = PMDS25NXW9;
 				ENABLE_APP_SANDBOX = YES;
+				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -453,9 +477,20 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = PMDS25NXW9;
 				ENABLE_APP_SANDBOX = YES;
+				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
