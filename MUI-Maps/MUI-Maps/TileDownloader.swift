@@ -40,7 +40,10 @@ actor TileDownloader {
             }
         }
         
+        // Substitute subdomain if present
+        let subdomain = ["a", "b", "c", "d"].randomElement() ?? "a"
         let urlString = urlTemplate
+            .replacingOccurrences(of: "{s}", with: subdomain)
             .replacingOccurrences(of: "{z}", with: "\(tile.z)")
             .replacingOccurrences(of: "{x}", with: "\(tile.x)")
             .replacingOccurrences(of: "{y}", with: "\(tile.y)")

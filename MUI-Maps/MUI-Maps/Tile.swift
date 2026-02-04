@@ -79,11 +79,13 @@ enum TileStyle: String, CaseIterable, Identifiable {
     var urlTemplate: String {
         switch self {
         case .osm:
+            // OSM default tile server; for heavy use provide your own server or provider key
             return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         case .cartoLight:
-            return "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
+            // Carto uses multiple subdomains; {s} will be replaced with a/b/c/d
+            return "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
         case .cartoDark:
-            return "https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
+            return "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
         }
     }
 }

@@ -161,16 +161,19 @@ class TileDownloadViewModel: ObservableObject {
                     } else {
                         await MainActor.run {
                             failedCount += 1
+                            errorMessage = "Conversion failed for tile \(tile.z)/\(tile.x)/\(tile.y)"
                         }
                     }
                 } else {
                     await MainActor.run {
                         failedCount += 1
+                        errorMessage = "Download failed for tile \(tile.z)/\(tile.x)/\(tile.y)"
                     }
                 }
             } catch {
                 await MainActor.run {
                     failedCount += 1
+                    errorMessage = error.localizedDescription
                 }
             }
             
