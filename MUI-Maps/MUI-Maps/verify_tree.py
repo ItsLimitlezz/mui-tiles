@@ -33,7 +33,9 @@ def main():
     ap.add_argument("--ext", required=True, help="png|jpg|bin")
     ap.add_argument("--x", help="x range like 7532..7540")
     ap.add_argument("--y", help="y range like 4911..4919")
+    ap.add_argument("--verbose", "-v", action="store_true", help="Enable verbose debug output")
     args = ap.parse_args()
+    verbose = args.verbose
 
     root = Path(args.root)
     zdir = root / str(args.z)
@@ -42,6 +44,7 @@ def main():
         raise SystemExit(f"Missing zoom dir: {zdir}")
 
     sizes = []
+    examples = []  # (path, size) samples for verbose output
     missing = 0
     checked = 0
 
@@ -54,18 +57,35 @@ def main():
                 checked += 1
                 if not p.exists():
                     missing += 1
+                    if verbose:
+                        print(f"missing: {p}")
                     continue
                 sizes.append(p.stat().st_size)
+                if verbose and len(examples) < 10:
+                    try:
+                        examples.append((str(p), p.stat().st_size))
+                    except Exception:
+                        pass
     else:
         for p in zdir.rglob(f"*.{args.ext}"):
             if p.is_file():
                 sizes.append(p.stat().st_size)
+                if verbose and len(examples) < 10:
+                    try:
+                        examples.append((str(p), p.stat().st_size))
+                    except Exception:
+                        pass
 
     if sizes:
         print(f"found={len(sizes)} files ext=.{args.ext} z={args.z}")
         print(f"min_size={min(sizes)} max_size={max(sizes)}")
     else:
         print(f"found=0 files ext=.{args.ext} z={args.z}")
+
+    if verbose and sizes and examples:
+        print("examples (path -> size):")
+        for path, sz in examples:
+            print(f"  {path} -> {sz}")
 
     if args.x and args.y:
         print(f"checked={checked} missing={missing}")
@@ -75,3 +95,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
