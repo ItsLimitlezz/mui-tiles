@@ -22,6 +22,7 @@ class TileDownloadViewModel: ObservableObject {
     @Published var selectedStyle: TileStyle = .osm
     @Published var keepPNG: Bool = false
     @Published var delayMs: Int = 50
+    @Published var includeWorld: Bool = false
     
     // Output settings
     @Published var outputDirectory: URL?
@@ -117,8 +118,13 @@ class TileDownloadViewModel: ObservableObject {
             let tilesAtZ = Tile.tilesForBBox(zoom: z, west: bbox.west, south: bbox.south, east: bbox.east, north: bbox.north)
             total += tilesAtZ.count
         }
-        let sizeMB = Double(total * 131_084) / (1024.0 * 1024.0)
-        return (total, sizeMB)
+        var adjustedTotal = total
+        if includeWorld {
+            // Add the single world tile at z=0
+            adjustedTotal += 1
+        }
+        let sizeMB = Double(adjustedTotal * 131_084) / (1024.0 * 1024.0)
+        return (adjustedTotal, sizeMB)
     }
 
     /// Convenience wrapper for UI that uses current state and expects ContentView to pass maxZoom via state.
@@ -177,6 +183,15 @@ class TileDownloadViewModel: ObservableObject {
         for z in minZ...maxZ {
             let tz = Tile.tilesForBBox(zoom: z, west: bbox.west, south: bbox.south, east: bbox.east, north: bbox.north)
             allTiles.append(contentsOf: tz)
+        }
+
+        // Optionally include the single world tile (z=0, x=0, y=0) separately from the min-max range
+        if includeWorld {
+            let worldTile = Tile(z: 0, x: 0, y: 0)
+            // Avoid duplicates if minZoom is 0 and already included
+            if !allTiles.contains(where: { $0.z == 0 && $0.x == 0 && $0.y == 0 }) {
+                allTiles.insert(worldTile, at: 0)
+            }
         }
 
         totalTiles = allTiles.count
