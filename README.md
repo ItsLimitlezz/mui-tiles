@@ -36,6 +36,20 @@ pip install -r requirements.txt
 
 ### 3) Run (download + convert)
 
+#### Easiest: interactive wizard (recommended)
+
+```bash
+./mui_tiles.py wizard
+```
+
+It walks you through:
+- Country (USA / Canada / Mexico)
+- Region (menu)
+- Zoom mode (Recommended / Fast / Detailed / Custom)
+- Style (menu)
+
+#### Direct mode: center+radius
+
 Example: download a 9×9 grid around Sydney at zoom 13:
 
 ```bash

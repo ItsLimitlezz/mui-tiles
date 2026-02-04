@@ -354,51 +354,111 @@ def wizard(
     keep_png: bool = typer.Option(False, help="Keep downloaded png files next to .bin"),
     delay_ms: int = typer.Option(80, help="Delay between downloads (politeness)"),
 ):
-    """Interactive menu flow (country -> place -> zoom range -> style)"""
+    """Interactive menu flow (country -> region menu -> recommended zoom -> style)."""
     console.print(BANNER)
     ensure_ok_lvglimage()
 
+    USA_STATES = [
+        "Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware",
+        "District of Columbia","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa",
+        "Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota",
+        "Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico",
+        "New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island",
+        "South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington",
+        "West Virginia","Wisconsin","Wyoming",
+    ]
+    CANADA_REGIONS = [
+        "Alberta","British Columbia","Manitoba","New Brunswick","Newfoundland and Labrador",
+        "Northwest Territories","Nova Scotia","Nunavut","Ontario","Prince Edward Island","Quebec",
+        "Saskatchewan","Yukon",
+    ]
+    MEXICO_STATES = [
+        "Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas","Chihuahua",
+        "Coahuila","Colima","Durango","Guanajuato","Guerrero","Hidalgo","Jalisco","Mexico City",
+        "Mexico State","Michoacán","Morelos","Nayarit","Nuevo León","Oaxaca","Puebla","Querétaro",
+        "Quintana Roo","San Luis Potosí","Sinaloa","Sonora","Tabasco","Tamaulipas","Tlaxcala",
+        "Veracruz","Yucatán","Zacatecas",
+    ]
+
     countries = [
-        ("USA", "us"),
-        ("Canada", "ca"),
-        ("Mexico", "mx"),
+        ("USA", "us", USA_STATES),
+        ("Canada", "ca", CANADA_REGIONS),
+        ("Mexico", "mx", MEXICO_STATES),
     ]
 
     console.print("[bold]Select a country[/bold]")
-    for i, (name, _) in enumerate(countries, start=1):
+    for i, (name, _, _) in enumerate(countries, start=1):
         console.print(f"  {i}) {name}")
-    idx = IntPrompt.ask("Country", choices=[str(i) for i in range(1, len(countries) + 1)], default="1")
-    country_name, country_code = countries[int(idx) - 1]
-
-    console.print(
-        f"\n[bold]{country_name}[/bold] selected. Now choose a place/region (examples: 'Ontario', 'Florida', 'Toronto', 'Miami')."
+    idx = IntPrompt.ask(
+        "Country",
+        choices=[str(i) for i in range(1, len(countries) + 1)],
+        default="1",
     )
-    query = Prompt.ask("Place/region")
+    country_name, country_code, region_list = countries[int(idx) - 1]
 
-    console.print("\nSearching...")
+    console.print(f"\n[bold]{country_name}[/bold] selected.")
+
+    # Region menu
+    console.print("\n[bold]Select a region[/bold]")
+    for i, rname in enumerate(region_list, start=1):
+        console.print(f"  {i}) {rname}")
+    ridx = IntPrompt.ask(
+        "Region",
+        choices=[str(i) for i in range(1, len(region_list) + 1)],
+        default="1",
+    )
+    region_name = region_list[int(ridx) - 1]
+
+    # Geocode automatically (user doesn't type coords)
+    console.print(f"\nFinding {region_name}...")
+    query = f"{region_name}, {country_name}"
     try:
-        results = geocode_places(query=query, country_code=country_code, limit=6)
+        results = geocode_places(query=query, country_code=country_code, limit=3)
     except Exception as e:
         raise typer.BadParameter(f"Geocoding failed: {e}")
-
     if not results:
-        raise typer.BadParameter("No matches found. Try a more specific query (e.g., 'Florida USA', 'Ontario Canada').")
+        raise typer.BadParameter(f"Could not locate '{region_name}'.")
 
-    console.print("\n[bold]Pick a match[/bold]")
-    for i, r in enumerate(results, start=1):
-        name = r.get("display_name", "(unknown)")
-        console.print(f"  {i}) {name}")
+    # If multiple results exist, pick the best looking one, but still offer a choice.
+    if len(results) > 1:
+        console.print("\n[bold]Pick the best match[/bold]")
+        for i, r in enumerate(results, start=1):
+            console.print(f"  {i}) {r.get('display_name','(unknown)')}")
+        pick = IntPrompt.ask("Match", choices=[str(i) for i in range(1, len(results) + 1)], default="1")
+        place = results[int(pick) - 1]
+    else:
+        place = results[0]
 
-    pick = IntPrompt.ask("Match", choices=[str(i) for i in range(1, len(results) + 1)], default="1")
-    place = results[int(pick) - 1]
     west, south, east, north = bbox_from_nominatim(place)
-
     console.print(
-        f"\nUsing bounding box:\n  west={west:.5f} south={south:.5f}\n  east={east:.5f} north={north:.5f}"
+        f"Using bounding box:\n  west={west:.3f} south={south:.3f}\n  east={east:.3f} north={north:.3f}"
     )
 
-    min_z = IntPrompt.ask("Zoom OUT (min zoom)", default=10)
-    max_z = IntPrompt.ask("Zoom IN (max zoom)", default=13)
+    # Zoom presets (dumb-easy defaults)
+    zoom_presets = [
+        ("Recommended (balanced)", 6, 13),
+        ("Fast (smaller download)", 6, 11),
+        ("Detailed (bigger download)", 6, 15),
+        ("Custom", None, None),
+    ]
+    console.print("\n[bold]Zoom range[/bold]")
+    for i, (label, zmin, zmax) in enumerate(zoom_presets, start=1):
+        if zmin is None:
+            console.print(f"  {i}) {label}")
+        else:
+            console.print(f"  {i}) {label}  ({zmin}..{zmax})")
+    zidx = IntPrompt.ask(
+        "Zoom mode",
+        choices=[str(i) for i in range(1, len(zoom_presets) + 1)],
+        default="1",
+    )
+    label, zmin, zmax = zoom_presets[int(zidx) - 1]
+    if zmin is None:
+        min_z = IntPrompt.ask("Zoom OUT (min zoom)", default=6)
+        max_z = IntPrompt.ask("Zoom IN (max zoom)", default=13)
+    else:
+        min_z, max_z = zmin, zmax
+
     if min_z < 0 or max_z > 19 or min_z > max_z:
         raise typer.BadParameter("Zoom range must be within 0..19 and min<=max")
 
@@ -406,12 +466,12 @@ def wizard(
     console.print("\n[bold]Select a map style[/bold]")
     style_keys = list(STYLES.keys())
     for i, k in enumerate(style_keys, start=1):
-        console.print(f"  {i}) {k} -> {STYLES[k]}")
+        console.print(f"  {i}) {k}")
     sidx = IntPrompt.ask("Style", choices=[str(i) for i in range(1, len(style_keys) + 1)], default="1")
     style = style_keys[int(sidx) - 1]
     url_tmpl = STYLES[style]
 
-    # Estimate tiles
+    # Estimate tiles + size
     total_tiles = 0
     tiles_by_zoom: dict[int, list[Tile]] = {}
     for z in range(min_z, max_z + 1):
@@ -419,8 +479,17 @@ def wizard(
         tiles_by_zoom[z] = tz
         total_tiles += len(tz)
 
-    console.print(f"\nThis will download/convert about [bold]{total_tiles}[/bold] tiles.")
-    go = Prompt.ask("Continue?", choices=["y", "n"], default="y")
+    approx_mb = (total_tiles * 131_084) / (1024 * 1024)  # typical RGB565 bin tile size
+
+    console.print(
+        f"\nPlan: [bold]{country_name} / {region_name}[/bold] | zoom {min_z}..{max_z} | style {style}"
+    )
+    console.print(f"Estimated tiles: [bold]{total_tiles}[/bold] (~{approx_mb:.1f} MB)")
+
+    if total_tiles > 25000:
+        console.print("[yellow]Warning:[/yellow] That is a LOT of tiles. Consider 'Fast' mode or a tighter area.")
+
+    go = Prompt.ask("Start download?", choices=["y", "n"], default="y")
     if go.lower() != "y":
         raise typer.Exit(0)
 
@@ -439,9 +508,7 @@ def wizard(
         grand_conv += conv
         grand_fail += fail
 
-    console.print(
-        f"\n[bold]done[/bold] downloaded={grand_dl} converted={grand_conv} failed={grand_fail}"
-    )
+    console.print(f"\n[bold]done[/bold] downloaded={grand_dl} converted={grand_conv} failed={grand_fail}")
     console.print(f"SD-ready folder: {out / 'map'}")
 
 
