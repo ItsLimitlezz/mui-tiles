@@ -34,6 +34,7 @@ from rich.progress import (
     TimeElapsedColumn,
     TimeRemainingColumn,
 )
+from rich.prompt import IntPrompt, Prompt
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 console = Console()
@@ -96,6 +97,22 @@ def tiles_around(lat: float, lon: float, z: int, radius: int) -> list[Tile]:
     for dx in range(-radius, radius + 1):
         for dy in range(-radius, radius + 1):
             out.append(Tile(z=z, x=cx + dx, y=cy + dy))
+    return out
+
+
+def tiles_for_bbox(z: int, west: float, south: float, east: float, north: float) -> list[Tile]:
+    """Return all tiles at zoom z that intersect the given lat/lon bounding box."""
+    # Note: deg2num expects lat,lon. y increases southward.
+    x1, y1 = deg2num(north, west, z)  # top-left
+    x2, y2 = deg2num(south, east, z)  # bottom-right
+
+    xmin, xmax = sorted((x1, x2))
+    ymin, ymax = sorted((y1, y2))
+
+    out: list[Tile] = []
+    for x in range(xmin, xmax + 1):
+        for y in range(ymin, ymax + 1):
+            out.append(Tile(z=z, x=x, y=y))
     return out
 
 
@@ -175,6 +192,84 @@ def convert_png_to_bin(src_png: Path, dst_bin: Path) -> bool:
         return False
 
 
+def geocode_places(query: str, country_code: str, limit: int = 6) -> list[dict]:
+    """Geocode using Nominatim (OpenStreetMap).
+
+    Returns raw JSON dicts with keys like: display_name, lat, lon, boundingbox.
+    boundingbox format: [south, north, west, east] as strings.
+    """
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {
+        "q": query,
+        "format": "jsonv2",
+        "limit": str(limit),
+        "addressdetails": "1",
+        "countrycodes": country_code,
+    }
+    r = requests.get(url, params=params, headers={"User-Agent": USER_AGENT}, timeout=20)
+    r.raise_for_status()
+    data = r.json()
+    if not isinstance(data, list):
+        return []
+    return data
+
+
+def bbox_from_nominatim(place: dict) -> tuple[float, float, float, float]:
+    bb = place.get("boundingbox")
+    if not bb or len(bb) != 4:
+        raise ValueError("No boundingbox returned for place")
+    south, north, west, east = (float(bb[0]), float(bb[1]), float(bb[2]), float(bb[3]))
+    return west, south, east, north
+
+
+def download_convert_tiles(
+    tiles: list[Tile],
+    url_tmpl: str,
+    out: Path,
+    keep_png: bool,
+    delay_ms: int,
+) -> tuple[int, int, int]:
+    """Download (png) then convert to .bin into out/map/<z>/<x>/<y>.bin."""
+    map_root = out / "map"
+
+    session = requests.Session()
+    session.headers.update({"User-Agent": USER_AGENT})
+
+    ok_dl = 0
+    ok_conv = 0
+    miss = 0
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("{task.description}"),
+        BarColumn(),
+        TextColumn("{task.completed}/{task.total}"),
+        TimeElapsedColumn(),
+        TimeRemainingColumn(),
+        console=console,
+    ) as progress:
+        task = progress.add_task("download+convert", total=len(tiles))
+        for t in tiles:
+            png_path = map_root / str(t.z) / str(t.x) / f"{t.y}.png"
+            bin_path = map_root / str(t.z) / str(t.x) / f"{t.y}.bin"
+
+            if download_tile(session, url_tmpl, t, png_path):
+                ok_dl += 1
+                if convert_png_to_bin(png_path, bin_path):
+                    ok_conv += 1
+                    if not keep_png:
+                        png_path.unlink(missing_ok=True)
+                else:
+                    miss += 1
+            else:
+                miss += 1
+
+            progress.advance(task)
+            time.sleep(max(0.0, delay_ms / 1000.0))
+
+    return ok_dl, ok_conv, miss
+
+
 @app.command()
 def list_styles():
     """List built-in tile styles."""
@@ -251,6 +346,103 @@ def run(
         f"\n[bold]done[/bold] downloaded={ok_dl} converted={ok_conv} failed={miss}"
     )
     console.print(f"SD-ready folder: {map_root}")
+
+
+@app.command()
+def wizard(
+    out: Path = typer.Option(Path("./export"), help="Output folder (will contain map/...)") ,
+    keep_png: bool = typer.Option(False, help="Keep downloaded png files next to .bin"),
+    delay_ms: int = typer.Option(80, help="Delay between downloads (politeness)"),
+):
+    """Interactive menu flow (country -> place -> zoom range -> style)"""
+    console.print(BANNER)
+    ensure_ok_lvglimage()
+
+    countries = [
+        ("USA", "us"),
+        ("Canada", "ca"),
+        ("Mexico", "mx"),
+    ]
+
+    console.print("[bold]Select a country[/bold]")
+    for i, (name, _) in enumerate(countries, start=1):
+        console.print(f"  {i}) {name}")
+    idx = IntPrompt.ask("Country", choices=[str(i) for i in range(1, len(countries) + 1)], default="1")
+    country_name, country_code = countries[int(idx) - 1]
+
+    console.print(
+        f"\n[bold]{country_name}[/bold] selected. Now choose a place/region (examples: 'Ontario', 'Florida', 'Toronto', 'Miami')."
+    )
+    query = Prompt.ask("Place/region")
+
+    console.print("\nSearching...")
+    try:
+        results = geocode_places(query=query, country_code=country_code, limit=6)
+    except Exception as e:
+        raise typer.BadParameter(f"Geocoding failed: {e}")
+
+    if not results:
+        raise typer.BadParameter("No matches found. Try a more specific query (e.g., 'Florida USA', 'Ontario Canada').")
+
+    console.print("\n[bold]Pick a match[/bold]")
+    for i, r in enumerate(results, start=1):
+        name = r.get("display_name", "(unknown)")
+        console.print(f"  {i}) {name}")
+
+    pick = IntPrompt.ask("Match", choices=[str(i) for i in range(1, len(results) + 1)], default="1")
+    place = results[int(pick) - 1]
+    west, south, east, north = bbox_from_nominatim(place)
+
+    console.print(
+        f"\nUsing bounding box:\n  west={west:.5f} south={south:.5f}\n  east={east:.5f} north={north:.5f}"
+    )
+
+    min_z = IntPrompt.ask("Zoom OUT (min zoom)", default=10)
+    max_z = IntPrompt.ask("Zoom IN (max zoom)", default=13)
+    if min_z < 0 or max_z > 19 or min_z > max_z:
+        raise typer.BadParameter("Zoom range must be within 0..19 and min<=max")
+
+    # Style selection
+    console.print("\n[bold]Select a map style[/bold]")
+    style_keys = list(STYLES.keys())
+    for i, k in enumerate(style_keys, start=1):
+        console.print(f"  {i}) {k} -> {STYLES[k]}")
+    sidx = IntPrompt.ask("Style", choices=[str(i) for i in range(1, len(style_keys) + 1)], default="1")
+    style = style_keys[int(sidx) - 1]
+    url_tmpl = STYLES[style]
+
+    # Estimate tiles
+    total_tiles = 0
+    tiles_by_zoom: dict[int, list[Tile]] = {}
+    for z in range(min_z, max_z + 1):
+        tz = tiles_for_bbox(z=z, west=west, south=south, east=east, north=north)
+        tiles_by_zoom[z] = tz
+        total_tiles += len(tz)
+
+    console.print(f"\nThis will download/convert about [bold]{total_tiles}[/bold] tiles.")
+    go = Prompt.ask("Continue?", choices=["y", "n"], default="y")
+    if go.lower() != "y":
+        raise typer.Exit(0)
+
+    # Run
+    grand_dl = grand_conv = grand_fail = 0
+    for z in range(min_z, max_z + 1):
+        console.print(f"\n[bold]Zoom {z}[/bold] tiles={len(tiles_by_zoom[z])}")
+        dl, conv, fail = download_convert_tiles(
+            tiles=tiles_by_zoom[z],
+            url_tmpl=url_tmpl,
+            out=out,
+            keep_png=keep_png,
+            delay_ms=delay_ms,
+        )
+        grand_dl += dl
+        grand_conv += conv
+        grand_fail += fail
+
+    console.print(
+        f"\n[bold]done[/bold] downloaded={grand_dl} converted={grand_conv} failed={grand_fail}"
+    )
+    console.print(f"SD-ready folder: {out / 'map'}")
 
 
 @app.command()
