@@ -1,6 +1,6 @@
 # mui-tiles
 
-Download slippy-map tiles and convert them to **LVGL `.bin` (RGB565, no alpha)** in the exact folder layout MUI expects.
+Download slippy-map tiles and convert them to **LVGL `.bin` (RGB565, no alpha)** in the exact folder layout MUI expects. Includes a **macOS app (MUI-Maps)** and Python CLIs for bulk download/convert.
 
 **Output layout (SD-card ready):**
 
@@ -9,6 +9,20 @@ map/<z>/<x>/<y>.bin
 ```
 
 Copy the `map/` folder onto your device SD (or Portduino FS) and MUI will load the `.bin` tiles.
+
+## macOS app (MUI-Maps)
+- Point-and-click downloader/converter for MUI tiles (PNG → LVGL `.bin`, RGB565)
+- BYO tile provider/template (OSM, Carto, etc.) with attribution; supports style folders
+- Progress + polite rate limiting; optional keep-PNG toggle
+- Outputs SD-card-ready tree: `map/<z>/<x>/<y>.bin` (or `maps/<style>/...`)
+- Choose a writable output folder (sandbox-friendly)
+
+### Screenshot
+_Add your screenshot here (e.g., `docs/mui-maps.png`):_
+
+```markdown
+![MUI-Maps screenshot](docs/mui-maps.png)
+```
 
 ---
 
