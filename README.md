@@ -10,19 +10,20 @@ map/<z>/<x>/<y>.bin
 
 Copy the `map/` folder onto your device SD (or Portduino FS) and MUI will load the `.bin` tiles.
 
-## macOS app (MUI-Maps)
-- Point-and-click downloader/converter for MUI tiles (PNG → LVGL `.bin`, RGB565)
+## macOS app: Mesh Maps Studio (formerly MUI-Maps)
+- Point-and-click downloader/converter for MUI/MeshOS/Ripple tiles (PNG → LVGL `.bin`, RGB565)
 - BYO tile provider/template (OSM, Carto, etc.) with attribution; supports style folders and custom URL templates
 - Interactive MapKit preview: Control-click / long-press to drop a pin; overlays show the tile grid for your zoom & radius (and max-zoom grid)
 - Inputs: lat/lon, zoom, radius, style picker, custom template, delay ms, keep-PNG toggle; estimates tile count + size before you run
 - Progress UI with counts (downloaded / converted / failed) and cancel button; outputs SD-card-ready tree: `map/<z>/<x>/<y>.bin` (or `maps/<style>/...`)
 - Choose a writable output folder (sandbox-friendly)
+- Roadmap: **full Swift-native conversion pipeline** (no Python dependency) for App Store friendliness; legacy LVGLImage.py path will be removed once parity is validated.
 
 ### Screenshot
 _Add your screenshot here (e.g., `docs/mui-maps.png`):_
 
 ```markdown
-![MUI-Maps screenshot](docs/mui-maps.png)
+![Mesh Maps Studio screenshot](docs/mui-maps.png)
 ```
 
 ---
