@@ -214,6 +214,73 @@ def geocode_places(query: str, country_code: str, limit: int = 6) -> list[dict]:
     return data
 
 
+def score_place_result(region_name: str, desired_country: str, r: dict) -> int:
+    """Heuristic scoring so menu-based selections usually don't require a second prompt."""
+    score = 0
+    display = (r.get("display_name") or "").lower()
+    name = (r.get("name") or "").lower()
+    addresstype = (r.get("addresstype") or "").lower()
+    category = (r.get("category") or "").lower()
+    rtype = (r.get("type") or "").lower()
+
+    region_l = region_name.lower()
+    desired_country_l = desired_country.lower()
+
+    if region_l in display or region_l == name:
+        score += 20
+
+    # Prefer administrative boundaries
+    if category == "boundary" and rtype == "administrative":
+        score += 20
+
+    # Prefer state/province/region-level results over counties/cities
+    if addresstype in ("state", "province", "region", "territory", "state_district"):
+        score += 25
+    elif addresstype in ("county", "city", "town", "village"):
+        score -= 10
+
+    # Must be the right country name in display
+    if desired_country_l in display:
+        score += 10
+
+    # Penalize common ambiguous cases (e.g., Florida in Puerto Rico)
+    if "puerto rico" in display:
+        score -= 30
+
+    return score
+
+
+def pick_best_place(region_name: str, country_name: str, results: list[dict]) -> tuple[dict, bool]:
+    """Return (place, needs_prompt).
+
+    For menu-based regions (states/provinces), we strongly prefer admin boundary results
+    whose addresstype matches state/province/region.
+    """
+    if not results:
+        raise ValueError("No results")
+
+    # Filter to likely "region"-level hits first.
+    preferred_types = {"state", "province", "region", "territory", "state_district"}
+    filtered = [r for r in results if (r.get("addresstype") or "").lower() in preferred_types]
+    if filtered:
+        results = filtered
+
+    if len(results) == 1:
+        return results[0], False
+
+    scored = [(score_place_result(region_name, country_name, r), r) for r in results]
+    scored.sort(key=lambda t: t[0], reverse=True)
+
+    best_score, best = scored[0]
+    second_score = scored[1][0] if len(scored) > 1 else -999
+
+    # If best is clearly better, auto-pick
+    if best_score - second_score >= 10:
+        return best, False
+
+    return best, True
+
+
 def bbox_from_nominatim(place: dict) -> tuple[float, float, float, float]:
     bb = place.get("boundingbox")
     if not bb or len(bb) != 4:
@@ -439,23 +506,27 @@ def wizard(
 
     # Geocode automatically (user doesn't type coords)
     console.print(f"\nFinding {region_name}...")
-    query = f"{region_name}, {country_name}"
+
+    # Keep query dead simple; we rely on country code + filtering to pick the right admin region.
+    query = region_name
+
     try:
-        results = geocode_places(query=query, country_code=country_code, limit=3)
+        results = geocode_places(query=query, country_code=country_code, limit=5)
     except Exception as e:
         raise typer.BadParameter(f"Geocoding failed: {e}")
     if not results:
         raise typer.BadParameter(f"Could not locate '{region_name}'.")
 
-    # If multiple results exist, pick the best looking one, but still offer a choice.
-    if len(results) > 1:
+    # Auto-pick most of the time; only prompt if genuinely ambiguous.
+    best, needs_prompt = pick_best_place(region_name=region_name, country_name=country_name, results=results)
+    place = best
+
+    if needs_prompt:
         console.print("\n[bold]Pick the best match[/bold]")
         for i, r in enumerate(results, start=1):
             console.print(f"  {i}) {r.get('display_name','(unknown)')}")
         pick = IntPrompt.ask("Match", choices=[str(i) for i in range(1, len(results) + 1)], default="1")
         place = results[int(pick) - 1]
-    else:
-        place = results[0]
 
     west, south, east, north = bbox_from_nominatim(place)
     console.print(
