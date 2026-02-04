@@ -6,6 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1B2C3D4E500000000000001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000101 /* ContentView.swift */; };
+		A1B2C3D4E500000000000002 /* MUI_MapsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000102 /* MUI_MapsApp.swift */; };
+		A1B2C3D4E500000000000003 /* Tile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000103 /* Tile.swift */; };
+		A1B2C3D4E500000000000004 /* TileConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000104 /* TileConverter.swift */; };
+		A1B2C3D4E500000000000005 /* TileDownloadViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000105 /* TileDownloadViewModel.swift */; };
+		A1B2C3D4E500000000000006 /* TileDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E500000000000106 /* TileDownloader.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		B65CE70A2F33A4D700730866 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +36,13 @@
 		B65CE6FC2F33A4D600730866 /* MUI-Maps.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MUI-Maps.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B65CE7092F33A4D700730866 /* MUI-MapsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MUI-MapsTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B65CE7132F33A4D700730866 /* MUI-MapsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MUI-MapsUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+
+		A1B2C3D4E500000000000101 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/ContentView.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E500000000000102 /* MUI_MapsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/MUI_MapsApp.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E500000000000103 /* Tile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/Tile.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E500000000000104 /* TileConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/TileConverter.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E500000000000105 /* TileDownloadViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/TileDownloadViewModel.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E500000000000106 /* TileDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MUI-Maps/TileDownloader.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -236,6 +252,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1B2C3D4E500000000000001 /* ContentView.swift in Sources */,
+				A1B2C3D4E500000000000002 /* MUI_MapsApp.swift in Sources */,
+				A1B2C3D4E500000000000003 /* Tile.swift in Sources */,
+				A1B2C3D4E500000000000004 /* TileConverter.swift in Sources */,
+				A1B2C3D4E500000000000005 /* TileDownloadViewModel.swift in Sources */,
+				A1B2C3D4E500000000000006 /* TileDownloader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
