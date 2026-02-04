@@ -9,82 +9,34 @@ import Foundation
 import AppKit
 
 /// Service for converting PNG tiles to LVGL RGB565 binary format
-/// Note: use as a plain class (was previously an actor); call convertPNGToBin from async contexts.
+/// Swift-native: writes the LVGL BIN header + RGB565 pixels (no Python dependency).
 final class TileConverter {
     
-    private var warnedAboutFallback = false
-
-    /// Locate a Python interpreter to run LVGLImage.py
-    private func locatePython() -> URL? {
-        let env = ProcessInfo.processInfo.environment
-        if let py = env["MUI_TILES_PYTHON"], !py.isEmpty {
-            let url = URL(fileURLWithPath: py)
-            if FileManager.default.fileExists(atPath: url.path) { return url }
-        }
-        // Common macOS default
-        let candidates = ["/usr/bin/python3", "/usr/local/bin/python3", "/opt/homebrew/bin/python3", "/usr/bin/python"]
-        for c in candidates {
-            if FileManager.default.fileExists(atPath: c) { return URL(fileURLWithPath: c) }
-        }
-        return nil
+    /// LVGL header layout (little endian, 8 bytes total):
+    /// uint32_t header = (cf & 0x1F) | (w << 10) | (h << 21)
+    ///   cf: LV_IMG_CF_TRUE_COLOR (2) for RGB565
+    ///   w, h: 11-bit each
+    /// uint32_t data_size = width * height * 2
+    /// followed by RGB565 little-endian pixel data
+    private func writeLVGLBin(pixelsRGB565: Data, width: Int, height: Int, to url: URL) throws {
+        let cf: UInt32 = 2 // LV_IMG_CF_TRUE_COLOR
+        let w = UInt32(width & 0x7FF)
+        let h = UInt32(height & 0x7FF)
+        let header: UInt32 = (cf & 0x1F) | (w << 10) | (h << 21)
+        let dataSize: UInt32 = UInt32(width * height * 2)
+        var out = Data()
+        out.reserveCapacity(8 + pixelsRGB565.count)
+        // Little-endian header and data size
+        var headerLE = header.littleEndian
+        var sizeLE = dataSize.littleEndian
+        withUnsafeBytes(of: &headerLE) { out.append(contentsOf: $0) }
+        withUnsafeBytes(of: &sizeLE) { out.append(contentsOf: $0) }
+        out.append(pixelsRGB565)
+        try out.write(to: url)
     }
 
-    /// Locate LVGL's LVGLImage.py script
-    private func locateLVGLImage() -> URL? {
-        let env = ProcessInfo.processInfo.environment
-        if let p = env["MUI_TILES_LVGLIMAGE"], !p.isEmpty {
-            let url = URL(fileURLWithPath: p)
-            if FileManager.default.fileExists(atPath: url.path) { return url }
-        }
-        // Optionally look for a bundled resource named LVGLImage.py
-        if let bundled = Bundle.main.url(forResource: "LVGLImage", withExtension: "py") {
-            if FileManager.default.fileExists(atPath: bundled.path) { return bundled }
-        }
-        return nil
-    }
-
-    /// Try converting using LVGL's official LVGLImage.py script. Returns true on success.
-    private func convertWithLVGLImage(pngPath: URL, binPath: URL) async -> Bool {
-        guard let py = locatePython(), let lvgl = locateLVGLImage() else {
-            return false
-        }
-        let outDir = binPath.deletingLastPathComponent()
-        let name = binPath.deletingPathExtension().lastPathComponent
-        do {
-            try FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
-            let process = Process()
-            process.executableURL = py
-            process.arguments = [
-                lvgl.path,
-                pngPath.path,
-                "--ofmt", "BIN",
-                "--cf", "RGB565",
-                "-o", outDir.path,
-                "--name", name
-            ]
-            let stdout = Pipe()
-            let stderr = Pipe()
-            process.standardOutput = stdout
-            process.standardError = stderr
-            try process.run()
-            process.waitUntilExit()
-            if process.terminationStatus == 0 {
-                // LVGLImage writes the file into outDir using the provided name
-                if FileManager.default.fileExists(atPath: binPath.path) {
-                    if let attrs = try? FileManager.default.attributesOfItem(atPath: binPath.path),
-                       let size = attrs[.size] as? Int64, size > 1024 {
-                        return true
-                    }
-                }
-            }
-        } catch {
-            // fall through to fallback
-        }
-        return false
-    }
-
-    /// Fallback: Convert to raw RGB565 little-endian without LVGL header (not ideal for MUI)
-    private func convertPNGToRawRGB565Fallback(pngPath: URL, binPath: URL) throws -> Bool {
+    /// Convert PNG to RGB565 pixel buffer + LVGL BIN wrapper
+    private func convertPNGToRGB565Bin(pngPath: URL, binPath: URL) throws -> Bool {
         // Create parent directories
         let parentDir = binPath.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true)
@@ -127,7 +79,7 @@ final class TileConverter {
                 rgb565Data.append(UInt8(rgb565 >> 8))
             }
         }
-        try rgb565Data.write(to: binPath)
+        try writeLVGLBin(pixelsRGB565: rgb565Data, width: width, height: height, to: binPath)
         let attrs = try FileManager.default.attributesOfItem(atPath: binPath.path)
         if let size = attrs[.size] as? Int64, size > 1024 { return true }
         return false
@@ -139,19 +91,7 @@ final class TileConverter {
     ///   - binPath: Path to destination .bin file
     /// - Returns: true if conversion successful
     func convertPNGToBin(pngPath: URL, binPath: URL) async throws -> Bool {
-        // Ensure parent dir exists
-        let parentDir = binPath.deletingLastPathComponent()
-        try FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true)
-        // Prefer LVGL official converter for correct .bin header/format
-        if await convertWithLVGLImage(pngPath: pngPath, binPath: binPath) {
-            return true
-        }
-        // Fallback to raw RGB565 if LVGLImage.py is not available
-        if !warnedAboutFallback {
-            warnedAboutFallback = true
-            print("[TileConverter] Warning: Falling back to raw RGB565 .bin without LVGL header. Set MUI_TILES_LVGLIMAGE and MUI_TILES_PYTHON to use LVGL's converter.")
-        }
-        return try convertPNGToRawRGB565Fallback(pngPath: pngPath, binPath: binPath)
+        return try convertPNGToRGB565Bin(pngPath: pngPath, binPath: binPath)
     }
     
     /// Delete a file if it exists
