@@ -58,10 +58,21 @@ STYLES: Dict[str, str] = {
 
 USER_AGENT = "mui-tiles/0.1 (Meshtastic MUI bin tile tool; contact: local)"
 
-LVGLIMAGE = Path(
-    "/home/miles/.openclaw/workspace/standalone-ui/.pio/libdeps/native-mui/lvgl/scripts/LVGLImage.py"
-)
-PY = Path("/home/miles/.openclaw/workspace/mui-tiles/.venv/bin/python")
+HERE = Path(__file__).resolve().parent
+
+# You can override these with env vars:
+#   MUI_TILES_LVGLIMAGE=/path/to/LVGLImage.py
+#   MUI_TILES_PYTHON=/path/to/python
+#   MUI_TILES_STANDALONE_UI=/path/to/standalone-ui (used for auto-discovery)
+DEFAULT_STANDALONE_UI = Path(os.environ.get("MUI_TILES_STANDALONE_UI", str(HERE.parent / "standalone-ui")))
+
+LVGLIMAGE = Path(os.environ.get(
+    "MUI_TILES_LVGLIMAGE",
+    str(DEFAULT_STANDALONE_UI / ".pio/libdeps/native-mui/lvgl/scripts/LVGLImage.py"),
+))
+
+# Prefer local venv python, but fall back to current interpreter.
+PY = Path(os.environ.get("MUI_TILES_PYTHON", str(HERE / ".venv/bin/python")))
 
 
 @dataclass
@@ -91,12 +102,19 @@ def tiles_around(lat: float, lon: float, z: int, radius: int) -> list[Tile]:
 def ensure_ok_lvglimage():
     if not LVGLIMAGE.exists():
         raise typer.BadParameter(
-            f"Missing LVGLImage.py at {LVGLIMAGE}. Build standalone-ui native-mui first."
+            "Missing LVGLImage.py. Either build standalone-ui (native-mui) so it exists at:\n"
+            f"  {LVGLIMAGE}\n"
+            "or set MUI_TILES_LVGLIMAGE=/path/to/LVGLImage.py"
         )
+
+    # If the venv python path doesn't exist, we'll fall back to the current interpreter.
+    # This keeps the tool usable without forcing a venv, but venv is still recommended.
     if not PY.exists():
-        raise typer.BadParameter(
-            f"Missing venv python at {PY}. Create venv under mui-tiles/.venv first."
-        )
+        import sys
+
+        return Path(sys.executable)
+
+    return PY
 
 
 def download_tile(session: requests.Session, url_tmpl: str, t: Tile, out_png: Path, retries: int = 3) -> bool:
@@ -132,8 +150,11 @@ def download_tile(session: requests.Session, url_tmpl: str, t: Tile, out_png: Pa
 def convert_png_to_bin(src_png: Path, dst_bin: Path) -> bool:
     # LVGLImage's -o is a directory; file name comes from --name
     dst_bin.parent.mkdir(parents=True, exist_ok=True)
+
+    py = ensure_ok_lvglimage()
+
     cmd = [
-        str(PY),
+        str(py),
         str(LVGLIMAGE),
         str(src_png),
         "--ofmt",
