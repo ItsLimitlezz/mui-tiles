@@ -1,8 +1,6 @@
-# mui-tiles
+# Mesh Maps Studio
 
-Download slippy-map tiles and convert them to **LVGL `.bin` (RGB565, no alpha)** in the exact folder layout MUI expects. Includes a **macOS app (MUI-Maps)** and Python CLIs for bulk download/convert.
-
-**Output layout (SD-card ready):**
+Download **OpenStreetMap** tiles and convert to **LVGL `.bin` (RGB565, no alpha)** in the folder layout MUI expects. macOS 14+ only. Output is SD-card ready:
 
 ```
 map/<z>/<x>/<y>.bin
@@ -10,25 +8,29 @@ map/<z>/<x>/<y>.bin
 
 Copy the `map/` folder onto your device SD (or Portduino FS) and MUI will load the `.bin` tiles.
 
-## macOS app: Mesh Maps Studio (formerly MUI-Maps)
-- Point-and-click downloader/converter for MUI/MeshOS/Ripple tiles (PNG → LVGL `.bin`, RGB565)
-- BYO tile provider/template (OSM, Carto, etc.) with attribution; supports style folders and custom URL templates
-- Interactive MapKit preview: Control-click / long-press to drop a pin; overlays show the tile grid for your zoom & radius (and max-zoom grid)
-- Inputs: lat/lon, zoom, radius, style picker, custom template, delay ms, keep-PNG toggle; estimates tile count + size before you run
-- Progress UI with counts (downloaded / converted / failed) and cancel button; outputs SD-card-ready tree: `map/<z>/<x>/<y>.bin` (or `maps/<style>/...`)
-- Choose a writable output folder (sandbox-friendly)
-- Roadmap: **full Swift-native conversion pipeline** (no Python dependency) for App Store friendliness; legacy LVGLImage.py path will be removed once parity is validated.
-
-### Screenshot
-_Add your screenshot here (e.g., `docs/mui-maps.png`):_
-
-```markdown
 ![Mesh Maps Studio screenshot](docs/mui-maps.png)
-```
 
----
+## Features
+- macOS app (14+): point-and-click downloader/converter for MUI/MeshOS/Ripple tiles (PNG → LVGL `.bin`, RGB565)
+- Provider: **OpenStreetMap only** (no custom providers in this build)
+- Interactive MapKit preview: Control-click / long-press to drop a pin; overlays show tile grid for your zoom & radius
+- Inputs: zoom min/max, radius, delay ms, keep-PNG toggle; estimates tile count + size before you run
+- Progress UI with counts (downloaded / converted / failed), cancel button
+- Output: SD-card-ready tree `map/<z>/<x>/<y>.bin` (or `maps/<style>/...` if styles are used)
+- Sandbox-friendly: choose a writable output folder
+- Swift-only conversion (no Python dependency bundled)
 
-## Quick start
+## Quick start (app)
+1) macOS 14+ only. Download/build the app.
+2) Choose output folder (e.g., `~/Downloads/mui-tiles-export`).
+3) Pick zoom min/max and radius. Map style: OpenStreetMap.
+4) Click **Start Download**. (Optional: keep PNGs.)
+5) Copy the exported `map/` folder to your SD card root.
+
+## Notes
+- Respect OpenStreetMap’s tile usage policy; this build does **not** support custom providers.
+- Be gentle with download rates (use delay if pulling many tiles).
+- Output layout is SD-card ready for MUI.
 
 ### 1) Requirements
 
