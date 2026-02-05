@@ -92,6 +92,16 @@ struct MKMapViewContainer: NSViewRepresentable {
         longPress.allowableMovement = 6
         mapView.addGestureRecognizer(longPress)
 
+        // Add a compass button in the bottom-right
+        let compass = MKCompassButton(mapView: mapView)
+        compass.compassVisibility = .visible
+        compass.translatesAutoresizingMaskIntoConstraints = false
+        mapView.addSubview(compass)
+        NSLayoutConstraint.activate([
+            compass.trailingAnchor.constraint(equalTo: mapView.trailingAnchor, constant: -8),
+            compass.bottomAnchor.constraint(equalTo: mapView.bottomAnchor, constant: -8)
+        ])
+
         return mapView
     }
 
@@ -488,6 +498,10 @@ struct ContentView: View {
                     .tint(.red)
             }
         }
+        .mapControlsPlacement(.bottomTrailing)
+        .mapControls {
+            MapCompass()
+        }
         .onMapCameraChange { context in
             if let newRegion = context.region { region = newRegion }
         }
@@ -527,7 +541,7 @@ struct ContentView: View {
                         .imageScale(.large)
                         .font(.system(size: 48))
                         .foregroundStyle(.tint)
-                    Text("MUI Map Tiles Downloader")
+                    Text("Mesh Maps Studio")
                         .font(.title)
                         .fontWeight(.bold)
                     Text("Download OpenStreetMap tiles and convert to LVGL RGB565 .bin format")
@@ -744,7 +758,7 @@ struct ContentView: View {
                 .padding(.bottom, 16)
             }
             .frame(maxWidth: 420)
-            .frame(maxHeight: 650)
+            .frame(maxHeight: 750)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .padding()
         }
