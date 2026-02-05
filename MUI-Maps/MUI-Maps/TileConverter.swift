@@ -12,25 +12,26 @@ import AppKit
 /// Swift-native: writes the LVGL BIN header + RGB565 pixels (no Python dependency).
 final class TileConverter {
     
-    /// LVGL header layout (little endian, 8 bytes total):
-    /// uint32_t header = (cf & 0x1F) | (w << 10) | (h << 21)
-    ///   cf: LV_IMG_CF_TRUE_COLOR (2) for RGB565
-    ///   w, h: 11-bit each
-    /// uint32_t data_size = width * height * 2
+    /// LVGL header layout (v9, little endian, 12 bytes total):
+    /// magic (0x19), cf (0x12 = RGB565), flags (u16), width (u16), height (u16), stride (u16), reserved (u16)
     /// followed by RGB565 little-endian pixel data
     private func writeLVGLBin(pixelsRGB565: Data, width: Int, height: Int, to url: URL) throws {
-        let cf: UInt32 = 2 // LV_IMG_CF_TRUE_COLOR
-        let w = UInt32(width & 0x7FF)
-        let h = UInt32(height & 0x7FF)
-        let header: UInt32 = (cf & 0x1F) | (w << 10) | (h << 21)
-        let dataSize: UInt32 = UInt32(width * height * 2)
+        guard width <= 0xFFFF && height <= 0xFFFF else {
+            throw ConverterError.invalidImage
+        }
+        let magic: UInt8 = 0x19
+        let cf: UInt8 = 0x12 // ColorFormat.RGB565
+        let flags: UInt16 = 0
+        let stride: UInt16 = UInt16(width * 2) // bytes per row for RGB565
         var out = Data()
-        out.reserveCapacity(8 + pixelsRGB565.count)
-        // Little-endian header and data size
-        var headerLE = header.littleEndian
-        var sizeLE = dataSize.littleEndian
-        withUnsafeBytes(of: &headerLE) { out.append(contentsOf: $0) }
-        withUnsafeBytes(of: &sizeLE) { out.append(contentsOf: $0) }
+        out.reserveCapacity(12 + pixelsRGB565.count)
+        out.append(magic)
+        out.append(cf)
+        out.append(contentsOf: withUnsafeBytes(of: flags.littleEndian, Array.init))
+        out.append(contentsOf: withUnsafeBytes(of: UInt16(width).littleEndian, Array.init))
+        out.append(contentsOf: withUnsafeBytes(of: UInt16(height).littleEndian, Array.init))
+        out.append(contentsOf: withUnsafeBytes(of: stride.littleEndian, Array.init))
+        out.append(contentsOf: withUnsafeBytes(of: UInt16(0).littleEndian, Array.init)) // reserved
         out.append(pixelsRGB565)
         try out.write(to: url)
     }
