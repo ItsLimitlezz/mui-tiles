@@ -395,7 +395,7 @@ struct ContentView: View {
     }
 
     private func tryExtractTileFromURL(_ url: URL) -> (z: Int, x: Int, y: Int)? {
-        // Expecting path like .../map/<z>/<x>/<y>.bin
+        // Expecting path like .../maps/<style>/<z>/<x>/<y>.bin (or /map/z/x/y.bin)
         guard url.pathExtension.lowercased() == "bin" else { return nil }
         let yName = url.deletingPathExtension().lastPathComponent
         let xName = url.deletingLastPathComponent().lastPathComponent
@@ -473,7 +473,7 @@ struct ContentView: View {
             .buttonStyle(.bordered)
             .padding(.horizontal, 8)
 
-            Text("Double-click to drop a pin and set Latitude/Longitude. Or drop a .bin tile file (map/z/x/y.bin).")
+            Text("Double-click to drop a pin and set Latitude/Longitude. Or drop a .bin tile file (maps/<style>/z/x/y.bin or map/z/x/y.bin).")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 8)

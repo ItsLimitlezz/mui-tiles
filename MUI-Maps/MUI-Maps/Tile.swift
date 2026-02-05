@@ -71,21 +71,20 @@ struct Tile: Identifiable, Hashable {
 /// Map tile style options
 enum TileStyle: String, CaseIterable, Identifiable {
     case osm = "OpenStreetMap"
-    case cartoLight = "Carto Light"
-    case cartoDark = "Carto Dark"
     
     var id: String { rawValue }
+    
+    var folderName: String {
+        switch self {
+        case .osm: return "osm"
+        }
+    }
     
     var urlTemplate: String {
         switch self {
         case .osm:
-            // OSM default tile server; for heavy use provide your own server or provider key
+            // OSM default tile server; this build is OSM-only
             return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        case .cartoLight:
-            // Carto uses multiple subdomains; {s} will be replaced with a/b/c/d
-            return "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-        case .cartoDark:
-            return "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
         }
     }
 }

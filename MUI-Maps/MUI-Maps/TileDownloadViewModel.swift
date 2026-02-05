@@ -214,7 +214,9 @@ class TileDownloadViewModel: ObservableObject {
     
     /// Process all tiles: download PNG and convert to bin
     private func processTiles(_ tiles: [Tile], outputDir: URL) async {
-        let mapRoot = outputDir.appendingPathComponent("map")
+        let mapRoot = outputDir
+            .appendingPathComponent("maps")
+            .appendingPathComponent(selectedStyle.folderName)
         let urlTemplate = selectedStyle.urlTemplate
         
         for (index, tile) in tiles.enumerated() {
